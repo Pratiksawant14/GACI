@@ -197,6 +197,9 @@
 
 ## 11. Bugs Encountered & Resolutions
 * *Delivery fulfillment subtraction:* Adjusted stranded advance net balance formula to subtract partial deliveries recorded in `deliveries.csv`, ensuring exact cross-table fulfillment tracking.
+* *Streamlit ModuleNotFoundError (`frontend`):* Injected `PROJECT_ROOT` to `sys.path` dynamically in `frontend/app.py` so running `streamlit run frontend/app.py` works consistently across operating systems without requiring explicit `PYTHONPATH=.`.
+* *FastAPI Database Auto-Initialization:* Added startup schema creation fallback in `app/main.py` lifespan handler to ensure tables are guaranteed to exist even before running Alembic migrations in fresh test environments.
+* *Decimal JSON String Parsing in Streamlit UI:* Wrapped all monetary metrics, blockage scores, concentration shares, and daily cash trajectory amounts with `float()` and `pd.to_numeric(..., errors="coerce")` to safely parse Decimal strings serialized by FastAPI.
 
 ---
 

@@ -171,13 +171,13 @@ with tab_exec:
 
     try:
         summary = api.get_cash_summary(as_of=as_of_date)
-        liquid = summary.get("liquid_cash", 0.0)
-        overdue = summary.get("total_overdue_receivables", 0.0)
-        stranded = summary.get("total_stranded_advances", 0.0)
-        bounced = summary.get("bounced_cheque_exposure", 0.0)
-        ob_15d = summary.get("upcoming_obligations_15d", 0.0)
-        net_15d = summary.get("projected_net_position_15d", 0.0)
-        net_30d = summary.get("projected_net_position_30d", 0.0)
+        liquid = float(summary.get("liquid_cash") or 0.0)
+        overdue = float(summary.get("total_overdue_receivables") or 0.0)
+        stranded = float(summary.get("total_stranded_advances") or 0.0)
+        bounced = float(summary.get("bounced_cheque_exposure") or 0.0)
+        ob_15d = float(summary.get("upcoming_obligations_15d") or 0.0)
+        net_15d = float(summary.get("projected_net_position_15d") or 0.0)
+        net_30d = float(summary.get("projected_net_position_30d") or 0.0)
 
         # Deficit Warning Banner
         if net_15d < 0 or net_30d < 0:
@@ -218,7 +218,7 @@ with tab_exec:
         aging_data = api.get_aging_buckets(as_of=as_of_date)
         if aging_data:
             df_aging = pd.DataFrame(aging_data)
-            df_aging["total_amount"] = df_aging["total_amount"].astype(float)
+            df_aging["total_amount"] = pd.to_numeric(df_aging["total_amount"], errors="coerce").fillna(0.0)
             st.bar_chart(df_aging.set_index("bucket")["total_amount"])
         else:
             st.info("No overdue accounts receivable records found.")
@@ -235,6 +235,10 @@ with tab_block:
         blockages = api.get_blockages(as_of=as_of_date)
         if blockages:
             df_blk = pd.DataFrame(blockages)
+            df_blk["amount"] = pd.to_numeric(df_blk["amount"], errors="coerce").fillna(0.0)
+            df_blk["severity_score"] = pd.to_numeric(df_blk["severity_score"], errors="coerce").fillna(0.0)
+            df_blk["days_overdue"] = pd.to_numeric(df_blk["days_overdue"], errors="coerce").fillna(0)
+
             filter_cat = st.selectbox("Filter Blockage Category", ["ALL"] + sorted(list(df_blk["category"].unique())))
             if filter_cat != "ALL":
                 df_blk = df_blk[df_blk["category"] == filter_cat]
@@ -303,6 +307,9 @@ with tab_graph:
             concentrations = api.get_concentrations()
             if concentrations:
                 df_conc = pd.DataFrame(concentrations)
+                for num_col in ["blocked_amount", "concentration_percentage"]:
+                    if num_col in df_conc.columns:
+                        df_conc[num_col] = pd.to_numeric(df_conc[num_col], errors="coerce").fillna(0.0)
                 st.dataframe(
                     df_conc,
                     use_container_width=True,
@@ -322,7 +329,7 @@ with tab_fore:
         projection = api.get_cash_projection(as_of=as_of_date, horizon_days=30)
         daily = projection.get("daily_forecasts", [])
         first_deficit = projection.get("first_deficit_date")
-        max_deficit = projection.get("max_deficit_amount", 0.0)
+        max_deficit = float(projection.get("max_deficit_amount") or 0.0)
 
         if first_deficit:
             st.error(f"🚨 **First Liquidity Deficit Date:** {first_deficit} | Maximum Capital Shortfall: ₹{max_deficit:,.2f}")
@@ -331,6 +338,10 @@ with tab_fore:
 
         if daily:
             df_daily = pd.DataFrame(daily)
+            for d_col in ["opening", "inflows", "outflows", "closing"]:
+                if d_col in df_daily.columns:
+                    df_daily[d_col] = pd.to_numeric(df_daily[d_col], errors="coerce").fillna(0.0)
+
             st.line_chart(df_daily.set_index("date")["closing"])
 
             with st.expander("View Daily Cash Trajectory Ledger"):
