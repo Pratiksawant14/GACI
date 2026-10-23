@@ -11,6 +11,14 @@ import pandas as pd
 import math
 
 
+def _clean_str(v: Any) -> Optional[str]:
+    """Helper to cleanly coerce int/float/string to trimmed string or None."""
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return None
+    s = str(int(v)) if isinstance(v, (int, float)) and not pd.isna(v) and float(v).is_integer() else str(v).strip()
+    return None if s == "" or s.lower() == "nan" else s
+
+
 class CustomerImportRow(BaseModel):
     name: str = Field(..., min_length=1, description="Customer commercial name")
     credit_limit: Decimal = Field(default=Decimal("0.00"), ge=0, description="Authorized credit limit")
@@ -18,6 +26,28 @@ class CustomerImportRow(BaseModel):
     customer_code: Optional[str] = None
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Column aliases
+            if "customer_id" in data and "customer_code" not in data:
+                data["customer_code"] = data["customer_id"]
+            if "payment_terms_days" in data and "standard_payment_terms_days" not in data:
+                data["standard_payment_terms_days"] = data["payment_terms_days"]
+            elif "payment_terms" in data and "standard_payment_terms_days" not in data:
+                data["standard_payment_terms_days"] = data["payment_terms"]
+            if "phone" in data and "contact_phone" not in data:
+                data["contact_phone"] = data["phone"]
+            if "email" in data and "contact_email" not in data:
+                data["contact_email"] = data["email"]
+        return data
+
+    @field_validator("contact_phone", "customer_code", mode="before")
+    @classmethod
+    def clean_strings(cls, v):
+        return _clean_str(v)
 
 
 class SupplierImportRow(BaseModel):
@@ -27,6 +57,27 @@ class SupplierImportRow(BaseModel):
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "supplier_id" in data and "supplier_code" not in data:
+                data["supplier_code"] = data["supplier_id"]
+            if "lead_time_days" in data and "standard_lead_time_days" not in data:
+                data["standard_lead_time_days"] = data["lead_time_days"]
+            elif "lead_time" in data and "standard_lead_time_days" not in data:
+                data["standard_lead_time_days"] = data["lead_time"]
+            if "phone" in data and "contact_phone" not in data:
+                data["contact_phone"] = data["phone"]
+            if "email" in data and "contact_email" not in data:
+                data["contact_email"] = data["email"]
+        return data
+
+    @field_validator("contact_phone", "supplier_code", mode="before")
+    @classmethod
+    def clean_strings(cls, v):
+        return _clean_str(v)
+
 
 class BankAccountImportRow(BaseModel):
     account_name: str = Field(..., min_length=1)
@@ -35,14 +86,26 @@ class BankAccountImportRow(BaseModel):
     account_number: Optional[str] = None
     bank_name: Optional[str] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "account_id" in data and "account_number" not in data:
+                data["account_number"] = data["account_id"]
+            if "balance" in data and "current_balance" not in data:
+                data["current_balance"] = data["balance"]
+            # Normalize common account types
+            t = str(data.get("account_type", "")).upper().strip()
+            if t in ["CURRENT", "SAVINGS", "OVERDRAFT", "CHECKING", "BANK"]:
+                data["account_type"] = "BANK"
+            elif t in ["CASH_TILL", "PETTY_CASH", "CASH"]:
+                data["account_type"] = "CASH"
+        return data
+
     @field_validator("account_number", mode="before")
     @classmethod
     def clean_account_number(cls, v):
-        if v is None or (isinstance(v, float) and pd.isna(v)) or str(v).strip() == "" or str(v).lower() == "nan":
-            return None
-        if isinstance(v, (int, float)):
-            return str(int(v))
-        return str(v).strip()
+        return _clean_str(v)
 
 
 class InvoiceImportRow(BaseModel):
@@ -53,6 +116,21 @@ class InvoiceImportRow(BaseModel):
     total_amount: Decimal = Field(..., gt=0)
     paid_amount: Decimal = Field(default=Decimal("0.00"), ge=0)
     status: Literal["ISSUED", "PARTIAL", "PAID", "OVERDUE", "CANCELLED"] = "ISSUED"
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "invoice_id" in data and "invoice_number" not in data:
+                data["invoice_number"] = data["invoice_id"]
+            if "customer_id" in data and "customer_name" not in data:
+                data["customer_name"] = data["customer_id"]
+        return data
+
+    @field_validator("invoice_number", "customer_name", mode="before")
+    @classmethod
+    def clean_strings(cls, v):
+        return _clean_str(v)
 
     @model_validator(mode="after")
     def validate_dates_and_amounts(self) -> "InvoiceImportRow":
@@ -74,6 +152,11 @@ class PaymentImportRow(BaseModel):
     invoice_number: Optional[str] = None  # If direct allocation is provided in file
     allocated_amount: Optional[Decimal] = None
 
+    @field_validator("payment_reference", mode="before")
+    @classmethod
+    def clean_ref(cls, v):
+        return _clean_str(v)
+
 
 class AdvanceImportRow(BaseModel):
     advance_reference: str = Field(..., min_length=1)
@@ -84,6 +167,11 @@ class AdvanceImportRow(BaseModel):
     advance_amount: Decimal = Field(..., gt=0)
     fulfilled_amount: Decimal = Field(default=Decimal("0.00"), ge=0)
     status: Literal["DISBURSED", "PARTIAL_DELIVERED", "FULFILLED", "REFUNDED"] = "DISBURSED"
+
+    @field_validator("advance_reference", mode="before")
+    @classmethod
+    def clean_ref(cls, v):
+        return _clean_str(v)
 
     @model_validator(mode="after")
     def validate_dates(self) -> "AdvanceImportRow":
@@ -99,6 +187,11 @@ class DeliveryImportRow(BaseModel):
     delivery_date: date
     delivered_value: Decimal = Field(..., gt=0)
 
+    @field_validator("delivery_reference", "advance_reference", mode="before")
+    @classmethod
+    def clean_ref(cls, v):
+        return _clean_str(v)
+
 
 class ObligationImportRow(BaseModel):
     obligation_name: str = Field(..., min_length=1)
@@ -108,6 +201,14 @@ class ObligationImportRow(BaseModel):
     bank_account_name: Optional[str] = None
     recipient: Optional[str] = None
     status: Literal["SCHEDULED", "PAID", "OVERDUE", "DEFAULTED"] = "SCHEDULED"
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "type" in data and "category" not in data:
+                data["category"] = data["type"]
+        return data
 
 
 class RowValidationError(BaseModel):
