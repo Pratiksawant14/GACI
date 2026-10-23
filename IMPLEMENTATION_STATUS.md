@@ -2,11 +2,11 @@
 
 **Project:** Graph-Based Agentic Cash-Flow Intelligence System for Small Wholesale MSMEs  
 **Last Updated:** 2026-10-23  
-**Current Phase:** `PH-05` (Deterministic Financial & Graph Intelligence)  
-**Current Epic:** `EP-05` (Cash-Blockage & Contagion Engine)  
-**Current Story:** `ST-09` (Deterministic Financial Analysis Engine)  
-**Current Task:** `TSK-13` (Implement Core Cash Analysis Calculations)  
-**Current Subtask:** `SUB-44` (Implement liquid cash and overdue receivables analysis)  
+**Current Phase:** `PH-06` (FastAPI Backend & Deterministic Tooling)  
+**Current Epic:** `EP-06` (REST API Layer)  
+**Current Story:** `ST-11` (Backend API Endpoints & Middleware)  
+**Current Task:** `TSK-15` (Create FastAPI Application & Routers)  
+**Current Subtask:** `SUB-52` (Set up FastAPI app with CORS and exception handlers)  
 
 ---
 
@@ -24,16 +24,15 @@
   - OpenRouter API (`sk-or-v1-...`)
   - Google Gemini API (`AQ.Ab8RN6...`)
   - Hugging Face API (`hf_HQCjp...`)
-  - Multi-provider failover router ready for agent integration.
 
 ---
 
 ## 2. Current Position in Roadmap
-* **Current Phase:** `PH-05` (Deterministic Financial & Graph Intelligence)
-* **Current Epic:** `EP-05` (Cash-Blockage & Contagion Engine)
-* **Current Story:** `ST-09` (Deterministic Financial Analysis Engine)
-* **Current Task:** `TSK-13` (Implement Core Cash Analysis Calculations)
-* **Current Subtask:** `SUB-44` (Implement liquid cash and overdue receivables analysis)
+* **Current Phase:** `PH-06` (FastAPI Backend & Deterministic Tooling)
+* **Current Epic:** `EP-06` (REST API Layer)
+* **Current Story:** `ST-11` (Backend API Endpoints & Middleware)
+* **Current Task:** `TSK-15` (Create FastAPI Application & Routers)
+* **Current Subtask:** `SUB-52` (Set up FastAPI app with CORS and exception handlers)
 
 ---
 
@@ -41,11 +40,11 @@
 
 | Category | Total | Completed | In Progress | Pending | Blocked | Progress % |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Phases** | 8 | 4 | 1 | 3 | 0 | 50.0% |
-| **Epics** | 9 | 4 | 1 | 4 | 0 | 44.4% |
-| **Stories** | 16 | 8 | 1 | 7 | 0 | 50.0% |
-| **Tasks** | 21 | 12 | 1 | 8 | 0 | 57.1% |
-| **Subtasks** | 81 | 43 | 1 | 37 | 0 | 53.1% |
+| **Phases** | 8 | 5 | 1 | 2 | 0 | 62.5% |
+| **Epics** | 9 | 5 | 1 | 3 | 0 | 55.6% |
+| **Stories** | 16 | 10 | 1 | 5 | 0 | 62.5% |
+| **Tasks** | 21 | 14 | 1 | 6 | 0 | 66.7% |
+| **Subtasks** | 81 | 51 | 1 | 29 | 0 | 63.0% |
 
 *Progress is derived strictly from verified completed tasks.*
 
@@ -70,72 +69,64 @@
 
 ### Phase 4: Data Ingestion & Validation Pipeline (`PH-04`)
 * `TSK-10`: Implement Ingestion Row Schemas & Validators
-  - `SUB-31` to `SUB-34`: Created Pydantic v2 schemas in `app/schemas/ingestion.py` for customers, suppliers, bank accounts, invoices, payments, advances, deliveries, and obligations.
-  - Enforced business rules: `due_date >= issue_date`, `paid_amount <= total_amount`, `expected_delivery_date >= disbursement_date`, and non-negative amounts.
-  - `SUB-35`: Created `tests/unit/test_ingestion_schemas.py`. 5/5 unit tests passed.
 * `TSK-11`: Implement Ingestion Service
-  - `SUB-36`: Implemented multi-format CSV and Excel tabular data parsing in `app/services/ingestion_service.py`.
-  - `SUB-37`: Built atomic database batch persistence with duplicate deduplication (`existing_inv`, `existing_pmt`, `existing_adv`).
-  - `SUB-38`: Connected post-commit graph projection hook triggering `ProjectionService.sync_all()`.
-  - `SUB-39`: Implemented audit logging to `ingestion_logs` table. Created `tests/integration/test_ingestion_service.py` verifying full dataset load, idempotent re-import, and row error reporting.
 * `TSK-12`: Generate Comprehensive Sample Dataset
-  - `SUB-40` to `SUB-43`: Created realistic wholesale distributor CSV files in `data/samples/` covering 5 customers, 3 suppliers, 3 bank/cash accounts, 8 sales invoices (overdue buckets 30-60 and 60+ days), 4 payments (including a `BOUNCED` cheque), 3 advances (including a stranded advance), 2 deliveries, and 4 scheduled upcoming obligations (loan EMI, GST, payroll, rent).
-  - *Verification:* Full test suite executed (`pytest tests/`): 23/23 tests passed in 17.92s (100% pass rate).
+
+### Phase 5: Deterministic Financial & Graph Intelligence (`PH-05`)
+* `TSK-13`: Implement Core Cash Analysis Calculations
+  - `SUB-44`: Built liquid cash calculation across bank/cash accounts and overdue receivables aging in `app/analysis/cash_engine.py`.
+  - `SUB-45`: Implemented stranded advance identification, unfulfilled balance computation, and bounced cheque exposure tracking.
+  - `SUB-46`: Implemented day-by-day cash deficit projection over customizable time horizons (7, 15, 30 days) with first deficit date detection and maximum shortfall quantification.
+  - `SUB-47`: Created `tests/unit/test_cash_engine.py` asserting exact arbitrary-precision arithmetic across liquid cash, overdue aging, stranded advances, and deficit forecasting. 4/4 tests passed.
+* `TSK-14`: Implement Graph Contagion Queries
+  - `SUB-48`: Implemented `trace_receivable_to_obligation_paths` in `app/graph/contagion.py` mapping delayed customer receivables to impending scheduled liabilities.
+  - `SUB-49`: Built `find_top_counterparty_concentrations` calculating counterparty concentration percentages of blocked capital.
+  - `SUB-50`: Implemented `get_entity_subgraph` extracting node and edge payloads for interactive PyVis visualizer.
+  - `SUB-51`: Created `tests/integration/test_contagion.py`. Full test suite: 30/30 tests passed in 18.43s (100% pass rate).
 
 ---
 
 ## 5. In-Progress Work
-* `TSK-13`: Implement Core Cash Analysis Calculations (`SUB-44`, `SUB-45`, `SUB-46`, `SUB-47`).
+* `TSK-15`: Create FastAPI Application & Routers (`SUB-52` to `SUB-56`).
 
 ---
 
 ## 6. Pending Work & Blockers
-* **Pending:** Graph Contagion Queries (`TSK-14`), FastAPI Routers (`TSK-15`), LangGraph Agent Workflow (`TSK-17`), Streamlit Dashboard (`TSK-18`).
+* **Pending:** LangGraph Agent Workflow (`TSK-16`, `TSK-17`), Streamlit Dashboard (`TSK-18`, `TSK-19`), End-to-End Scenarios (`TSK-20`), Local Runbook (`TSK-21`).
 * **Blockers:** None.
 
 ---
 
 ## 7. Files Created, Modified, or Deleted
-* `app/schemas/ingestion.py` (Created): Ingestion schemas and validation reports.
-* `app/services/ingestion_service.py` (Created): Ingestion service and audit logger.
-* `data/samples/customers.csv` (Created): Sample customers dataset.
-* `data/samples/suppliers.csv` (Created): Sample suppliers dataset.
-* `data/samples/bank_accounts.csv` (Created): Sample bank/cash accounts dataset.
-* `data/samples/invoices.csv` (Created): Sample invoices with overdue profiles.
-* `data/samples/payments.csv` (Created): Sample payments including bounced cheque.
-* `data/samples/advances.csv` (Created): Sample advances including stranded advance.
-* `data/samples/deliveries.csv` (Created): Sample goods delivery records.
-* `data/samples/obligations.csv` (Created): Sample upcoming financial obligations.
-* `tests/unit/test_ingestion_schemas.py` (Created): Unit tests for row validation rules.
-* `tests/integration/test_ingestion_service.py` (Created): Integration tests for ingestion flow.
-* `tests/unit/test_config.py` (Updated): Resilient database URL test asserting custom and default derivations.
-* `.env` (Created, Git-Ignored): Configured with user-supplied API keys for OpenRouter, Gemini, and Hugging Face.
-* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 4 completion.
+* `app/schemas/analysis.py` (Created): Schemas for summaries, blockage items, aging buckets, and cash projections.
+* `app/analysis/cash_engine.py` (Created): Deterministic financial calculation engine.
+* `app/graph/contagion.py` (Created): Contagion path tracer, concentration analyzer, and subgraph extractor.
+* `tests/unit/test_cash_engine.py` (Created): Unit tests for cash calculations.
+* `tests/integration/test_contagion.py` (Created): Integration tests for contagion engine.
+* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 5 completion.
 
 ---
 
 ## 8. Database Schemas & Migrations Applied
-* Canonical schema and migrations verified in Phase 2. Ingestion populates records transactionally.
+* No new migrations required in Phase 5. Analysis queries operate against verified canonical and graph projection structures.
 
 ---
 
 ## 9. Commands Executed & Relevant Outcomes
-1. `pytest tests/unit/test_ingestion_schemas.py`: 5 passed in 0.74s.
-2. `pytest tests/`: 23 passed in 17.92s (100% pass rate).
+1. `pytest tests/unit/test_cash_engine.py`: 4 passed in 2.58s.
+2. `pytest tests/integration/test_contagion.py`: 3 passed in 8.98s.
+3. `pytest tests/`: 30 passed in 18.43s (100% pass rate).
 
 ---
 
 ## 10. Tests Executed
-* Total: 23 tests across 5 test modules.
-* **Pass Rate:** 23 / 23 (100%).
+* Total: 30 tests across 6 test modules.
+* **Pass Rate:** 30 / 30 (100%).
 
 ---
 
 ## 11. Bugs Encountered & Resolutions
-* **BUG-002 (Pandas CSV float coercion for optional string fields):**
-  - *Symptom:* `account_number: Input should be a valid string` during CSV ingestion because Pandas parsed numeric account IDs with empty cells as float64 (`50200012345678.0`).
-  - *Root Cause:* Pydantic v2 strict typing expects `str` or `None`.
-  - *Resolution:* Added `@field_validator("account_number", mode="before")` sanitizing floats, ints, empty strings, and NaN values into clean strings.
+* None in Phase 5. (Addressed SQL column ordering vs property call during implementation).
 
 ---
 
@@ -146,7 +137,8 @@
 * **ADR-004:** Multi-Provider LLM Configuration with Free-Tier Routing.
 * **ADR-005:** Repository-Level Specialized Domain Queries.
 * **ADR-006:** In-Memory NetworkX Graph Mirror in Projection Service.
-* **ADR-007:** Two-Tier Ingestion Validation (Row-level Pydantic schema validation followed by database-level referential integrity and duplicate key lookup).
+* **ADR-007:** Two-Tier Ingestion Validation.
+* **ADR-008:** Dual-Engine Contagion Tracing (Neo4j parameterized Cypher when connected, with automatic fallback to relational NetworkX topological tracing for offline/standalone operation).
 
 ---
 
@@ -169,14 +161,14 @@
 ---
 
 ## 16. Outstanding Questions Requiring Decision
-* None. Active API keys verified and loaded safely into `.env`.
+* None.
 
 ---
 
 ## 17. Precise Next Task to Execute
-* `TSK-13`: Implement Core Cash Analysis Calculations (`SUB-44`, `SUB-45`, `SUB-46`, `SUB-47`) in `app/analysis/cash_engine.py`.
+* `TSK-15`: Create FastAPI Application & Routers (`SUB-52` to `SUB-56`) in `app/main.py` and `app/api/v1/`.
 
 ---
 
 ## 18. Last Verified Working State
-* Phase 4 completed (`TSK-10`, `TSK-11`, `TSK-12`); 23/23 tests passing (100%).
+* Phase 5 completed (`TSK-13`, `TSK-14`); 30/30 tests passing (100%).
