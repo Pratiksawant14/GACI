@@ -344,15 +344,27 @@ with tab_fore:
 
         if daily:
             df_daily = pd.DataFrame(daily)
+            # Normalize column names if needed
+            rename_map = {
+                "forecast_date": "date",
+                "opening_balance": "opening",
+                "expected_inflows": "inflows",
+                "committed_outflows": "outflows",
+                "closing_balance": "closing"
+            }
+            df_daily.rename(columns=rename_map, inplace=True)
             for d_col in ["opening", "inflows", "outflows", "closing"]:
                 if d_col in df_daily.columns:
                     df_daily[d_col] = pd.to_numeric(df_daily[d_col], errors="coerce").fillna(0.0)
 
-            st.line_chart(df_daily.set_index("date")["closing"])
+            date_col = "date" if "date" in df_daily.columns else "forecast_date"
+            close_col = "closing" if "closing" in df_daily.columns else "closing_balance"
+            st.line_chart(df_daily.set_index(date_col)[close_col])
 
             with st.expander("View Daily Cash Trajectory Ledger"):
+                disp_cols = [c for c in ["date", "opening", "inflows", "outflows", "closing", "has_deficit"] if c in df_daily.columns]
                 st.dataframe(
-                    df_daily[["date", "opening", "inflows", "outflows", "closing", "has_deficit"]],
+                    df_daily[disp_cols],
                     use_container_width=True,
                     column_config={
                         "opening": st.column_config.NumberColumn("Opening", format="₹%.2f"),
