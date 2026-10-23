@@ -2,11 +2,11 @@
 
 **Project:** Graph-Based Agentic Cash-Flow Intelligence System for Small Wholesale MSMEs  
 **Last Updated:** 2026-10-23  
-**Current Phase:** `PH-03` (Temporal Business Graph & Neo4j Projection)  
-**Current Epic:** `EP-03` (Graph Schema & Projection Engine)  
-**Current Story:** `ST-05` (Neo4j Driver & Graph Schema Constraints)  
-**Current Task:** `TSK-08` (Implement Neo4j Client and Constraint Setup)  
-**Current Subtask:** `SUB-24` (Implement Neo4jClient with connection pooling and context management)  
+**Current Phase:** `PH-04` (Data Ingestion & Validation Pipeline)  
+**Current Epic:** `EP-04` (Tabular Data Ingestion & Sanitization)  
+**Current Story:** `ST-07` (Ingestion Parsers & Schema Validators)  
+**Current Task:** `TSK-10` (Implement Ingestion Row Schemas & Validators)  
+**Current Subtask:** `SUB-31` (Implement CustomerImportRow and SupplierImportRow)  
 
 ---
 
@@ -25,11 +25,11 @@
 ---
 
 ## 2. Current Position in Roadmap
-* **Current Phase:** `PH-03` (Temporal Business Graph & Neo4j Projection)
-* **Current Epic:** `EP-03` (Graph Schema & Projection Engine)
-* **Current Story:** `ST-05` (Neo4j Driver & Graph Schema Constraints)
-* **Current Task:** `TSK-08` (Implement Neo4j Client and Constraint Setup)
-* **Current Subtask:** `SUB-24` (Implement Neo4jClient with connection pooling and context management)
+* **Current Phase:** `PH-04` (Data Ingestion & Validation Pipeline)
+* **Current Epic:** `EP-04` (Tabular Data Ingestion & Sanitization)
+* **Current Story:** `ST-07` (Ingestion Parsers & Schema Validators)
+* **Current Task:** `TSK-10` (Implement Ingestion Row Schemas & Validators)
+* **Current Subtask:** `SUB-31` (Implement CustomerImportRow and SupplierImportRow)
 
 ---
 
@@ -37,11 +37,11 @@
 
 | Category | Total | Completed | In Progress | Pending | Blocked | Progress % |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Phases** | 8 | 2 | 1 | 5 | 0 | 25.0% |
-| **Epics** | 9 | 2 | 1 | 6 | 0 | 22.2% |
-| **Stories** | 16 | 4 | 1 | 11 | 0 | 25.0% |
-| **Tasks** | 21 | 7 | 1 | 13 | 0 | 33.3% |
-| **Subtasks** | 81 | 23 | 1 | 57 | 0 | 28.4% |
+| **Phases** | 8 | 3 | 1 | 4 | 0 | 37.5% |
+| **Epics** | 9 | 3 | 1 | 5 | 0 | 33.3% |
+| **Stories** | 16 | 6 | 1 | 9 | 0 | 37.5% |
+| **Tasks** | 21 | 9 | 1 | 11 | 0 | 42.9% |
+| **Subtasks** | 81 | 30 | 1 | 50 | 0 | 37.0% |
 
 *Progress is derived strictly from verified completed tasks.*
 
@@ -73,7 +73,6 @@
   - `SUB-14`: Created `app/models/entities.py` defining `Business`, `Customer`, `Supplier`, and `BankAccount`.
   - `SUB-15`: Created `app/models/finance.py` defining `SalesInvoice`, `Payment`, and `PaymentAllocation` with double-entry allocation and `unpaid_balance` computation.
   - `SUB-16`: Implemented `SupplierAdvance`, `Delivery`, `FinancialObligation`, and `IngestionLog` with `unfulfilled_balance` logic. Exported all models in `app/models/__init__.py`.
-  - *Verification:* Created `tests/unit/test_models.py`. Executed `pytest`: 4/4 tests passed.
 * `TSK-06`: Configure Alembic Migration Suite
   - `SUB-17`: Initialized Alembic environment (`alembic/`).
   - `SUB-18`: Configured `alembic/env.py` to bind dynamically to `settings.SQLALCHEMY_DATABASE_URI` and target `Base.metadata`. Updated `alembic/script.py.mako`.
@@ -81,50 +80,59 @@
 * `TSK-07`: Implement Database Session & Base Repository
   - `SUB-20`: Created `app/db/session.py` with connection pooling, `get_db` FastAPI dependency, `get_db_context`, and `transactional` context manager.
   - `SUB-21`: Implemented `app/db/repositories/base_repo.py` and `app/db/repositories/party_repo.py` (`BusinessRepository`, `CustomerRepository`, `SupplierRepository`, `BankAccountRepository`).
-  - `SUB-22`: Implemented `app/db/repositories/finance_repo.py` (`InvoiceRepository`, `PaymentRepository`, `AdvanceRepository`, `ObligationRepository`, `IngestionLogRepository`) with specialized domain queries (e.g., `get_overdue_invoices`, `get_stranded_advances`, `get_upcoming_obligations`).
-  - `SUB-23`: Created `tests/integration/test_repositories.py`. Verified CRUD operations, domain queries, and transactional rollback on exceptions. Full test suite: 10/10 tests passed (100%).
+  - `SUB-22`: Implemented `app/db/repositories/finance_repo.py` (`InvoiceRepository`, `PaymentRepository`, `AdvanceRepository`, `ObligationRepository`, `IngestionLogRepository`) with specialized domain queries.
+  - `SUB-23`: Created `tests/integration/test_repositories.py`. Verified CRUD operations, domain queries, and transactional rollback on exceptions.
+
+### Phase 3: Temporal Business Graph & Neo4j Projection (`PH-03`)
+* `TSK-08`: Implement Neo4j Client and Constraint Setup
+  - `SUB-24`: Created `app/graph/client.py` implementing `Neo4jClient` with connection pooling, retry handling, offline detection, and parameterized execution.
+  - `SUB-25`: Created `app/graph/schema.py` defining uniqueness constraints and indexes for all 9 core node labels (`:Business`, `:Customer`, `:Supplier`, `:Invoice`, `:Payment`, `:BankAccount`, `:SupplierAdvance`, `:Delivery`, `:Obligation`).
+  - `SUB-26`: Created `tests/unit/test_graph_client.py`. Tested client initialization, offline verification, and mocked schema constraint application.
+* `TSK-09`: Build Graph Projection Service
+  - `SUB-27`: Created `app/graph/cypher_queries.py` with idempotent Cypher `MERGE` statements for all nodes and directed relationships (`:ISSUED_INVOICE`, `:MADE_PAYMENT`, `:ALLOCATED_TO`, `:DEPOSITED_IN`, `:DISBURSED_ADVANCE`, `:PAID_TO`, `:FULFILLS`, `:COMMITTED_TO`, `:PAYABLE_FROM`).
+  - `SUB-28`: Created `app/services/projection_service.py` implementing synchronized projections for all business, counterparty, and financial records.
+  - `SUB-29`: Built in-memory NetworkX directed graph projection (`build_networkx_graph`) for offline topological traversals and fast algorithmic analysis.
+  - `SUB-30`: Created `tests/integration/test_projection.py`. Verified projection sync count parity and NetworkX edge topologies. Full test suite: 15/15 tests passed (100%).
 
 ---
 
 ## 5. In-Progress Work
-* `TSK-08`: Implement Neo4j Client and Constraint Setup (`SUB-24`, `SUB-25`, `SUB-26`).
+* `TSK-10`: Implement Ingestion Row Schemas & Validators (`SUB-31`, `SUB-32`, `SUB-33`, `SUB-34`, `SUB-35`).
 
 ---
 
 ## 6. Pending Work & Blockers
-* **Pending:** Neo4j Projection Service (`TSK-09`), Ingestion Validation Schemas (`TSK-10`), Ingestion Pipeline (`TSK-11`), Cash Analysis Engine (`TSK-13`), LangGraph Agent Workflow (`TSK-17`), Streamlit Dashboard (`TSK-18`).
+* **Pending:** Ingestion Orchestrator & Batch Persistence (`TSK-11`), Sample Wholesale Dataset (`TSK-12`), Cash Analysis Engine (`TSK-13`), LangGraph Agent Workflow (`TSK-17`), Streamlit Dashboard (`TSK-18`).
 * **Blockers:** None.
 
 ---
 
 ## 7. Files Created, Modified, or Deleted
-* `alembic.ini` (Created): Alembic configuration file.
-* `alembic/env.py` (Created & Configured): Dynamic migration environment.
-* `alembic/script.py.mako` (Updated): Auto-import template with `app.models.base`.
-* `alembic/versions/0f001eb4d9b1_initial_canonical_schema.py` (Created): Initial canonical schema migration.
-* `app/db/session.py` (Created): Session factory, engine manager, and transactional context.
-* `app/db/repositories/base_repo.py` (Created): Generic BaseRepository.
-* `app/db/repositories/party_repo.py` (Created): Repositories for Business, Customer, Supplier, BankAccount.
-* `app/db/repositories/finance_repo.py` (Created): Repositories for Invoice, Payment, Advance, Obligation, IngestionLog.
-* `app/db/repositories/__init__.py` (Updated): Repositories package exports.
-* `tests/integration/test_repositories.py` (Created): Integration test suite for repositories and transactions.
+* `app/graph/client.py` (Created): Neo4j connection pool and query executor.
+* `app/graph/schema.py` (Created): Uniqueness constraints and indexes for Neo4j.
+* `app/graph/cypher_queries.py` (Created): Parameterized Cypher query templates.
+* `app/services/projection_service.py` (Created): Graph projection synchronizer and NetworkX builder.
+* `tests/unit/test_graph_client.py` (Created): Unit test suite for Neo4j client.
+* `tests/integration/test_projection.py` (Created): Integration test suite for graph projection.
+* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 3 completion.
 
 ---
 
 ## 8. Database Schemas & Migrations Applied
-* `0f001eb4d9b1_initial_canonical_schema.py`: Baseline migration created and verified via upgrade/downgrade test.
+* `0f001eb4d9b1_initial_canonical_schema.py`: Baseline migration created and verified.
+* Neo4j constraints defined in `app/graph/schema.py`.
 
 ---
 
 ## 9. Commands Executed & Relevant Outcomes
-1. `alembic init alembic`: Successfully initialized migration tree.
-2. `alembic revision --autogenerate -m "initial_canonical_schema"`: Created baseline migration capturing all 10 canonical tables.
-3. `alembic upgrade head; alembic downgrade base`: Successfully migrated up and reverted without error.
-4. `pytest tests/`: 10 passed in 3.72s (100% pass rate).
+1. `pytest tests/unit/test_graph_client.py`: 4 passed in 15.43s.
+2. `pytest tests/`: 15 passed in 16.36s (100% pass rate).
 
 ---
 
 ## 10. Tests Executed
+* `tests/integration/test_projection.py`:
+  - `test_projection_service_sync_and_networkx`: PASSED
 * `tests/integration/test_repositories.py`:
   - `test_repositories_crud`: PASSED
   - `test_advance_and_obligation_repositories`: PASSED
@@ -133,20 +141,22 @@
   - `test_default_settings`: PASSED
   - `test_override_database_url`: PASSED
   - `test_fixture_settings`: PASSED
+* `tests/unit/test_graph_client.py`:
+  - `test_neo4j_client_initialization`: PASSED
+  - `test_neo4j_client_verify_connectivity_offline`: PASSED
+  - `test_init_graph_schema_with_mocked_driver`: PASSED
+  - `test_init_graph_schema_skipped_when_offline`: PASSED
 * `tests/unit/test_models.py`:
   - `test_business_and_party_models`: PASSED
   - `test_invoice_and_allocation_lifecycle`: PASSED
   - `test_supplier_advance_and_delivery`: PASSED
   - `test_financial_obligation`: PASSED
-* **Total:** 10 / 10 PASSED (100%).
+* **Total:** 15 / 15 PASSED (100%).
 
 ---
 
 ## 11. Bugs Encountered & Resolutions
-* **BUG-001 (Alembic autogenerate missing import for custom GUID type):**
-  - *Symptom:* `NameError: name 'app' is not defined` when executing initial migration.
-  - *Root Cause:* Alembic code generator outputs `app.models.base.GUID()` but does not automatically emit the module import in `script.py.mako`.
-  - *Resolution:* Added `import app.models.base` to both `alembic/script.py.mako` and `0f001eb4d9b1_initial_canonical_schema.py`. Re-executed migration cycle; verified clean pass.
+* None in Phase 3.
 
 ---
 
@@ -155,7 +165,8 @@
 * **ADR-002:** Deterministic Tools for Financial Arithmetic in Agent Workflow.
 * **ADR-003:** SQLite In-Memory Support for Isolated Unit Testing.
 * **ADR-004:** Multi-Provider LLM Configuration with Free-Tier Routing (OpenRouter, Gemini, Hugging Face).
-* **ADR-005:** Repository-Level Specialized Domain Queries (Encapsulate financial domain filtering such as `get_overdue_invoices` and `get_stranded_advances` directly in typed repositories rather than scattering ad-hoc queries across services).
+* **ADR-005:** Repository-Level Specialized Domain Queries.
+* **ADR-006:** In-Memory NetworkX Graph Mirror in Projection Service (Enables graph algorithms, contagion tracing, and offline execution in parallel with Neo4j persistence).
 
 ---
 
@@ -183,9 +194,9 @@
 ---
 
 ## 17. Precise Next Task to Execute
-* `TSK-08`: Implement Neo4j Client and Constraint Setup (`SUB-24`, `SUB-25`, `SUB-26`) in `app/graph/client.py` and `app/graph/schema.py`.
+* `TSK-10`: Implement Ingestion Row Schemas & Validators (`SUB-31` to `SUB-35`) in `app/schemas/ingestion.py`.
 
 ---
 
 ## 18. Last Verified Working State
-* Phase 2 completed (`TSK-05`, `TSK-06`, `TSK-07`); 10/10 tests passing (100%).
+* Phase 3 completed (`TSK-08`, `TSK-09`); 15/15 tests passing (100%).
