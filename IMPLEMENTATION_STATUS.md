@@ -93,55 +93,64 @@
   - `SUB-56`: Implemented graph intelligence router in `app/api/v1/router_graph.py` (`POST /sync`, `/subgraph`, `/contagion-paths`, `/concentrations`).
   - Implemented comprehensive integration test suite in `tests/integration/test_api.py`. All 6 API tests passing. Full suite: 36/36 tests passing (100%).
 
+### Phase 7: LangGraph Agent & Explainability Workflow (`PH-07`)
+* `TSK-16`: Implement Agent Tools & Provider Routing Engine
+  - `SUB-57`: Built `AgentToolSuite` in `app/agent/tools.py` wrapping deterministic calculations for cash summary, overdue receivables, stranded advances, bounced cheques, forward cash-flow projection, contagion paths, and counterparty concentrations.
+  - `SUB-58`: Implemented `MultiProviderLLMClient` in `app/agent/llm_client.py` with multi-provider failover across OpenRouter (Llama 3.3 70B / Mistral free tiers), Google Gemini (Gemini 2.0 Flash), Hugging Face Inference API, and grounded deterministic synthesis fallback.
+  - `SUB-59`: Formulated `AGENT_SYSTEM_PROMPT` and evidence prompt builders in `app/agent/prompts.py` enforcing strict zero-hallucination rules and mandatory canonical database citations.
+  - `SUB-60`: Implemented `tests/unit/test_agent_tools.py` verifying tool extractions, intent classification, and multi-provider failover. 3/3 tests passed.
+* `TSK-17`: Construct LangGraph State Graph & Explainability Pipeline
+  - `SUB-61`: Defined typed state schemas in `app/agent/state.py` (`AgentState`, `AgentCitation`).
+  - `SUB-62` & `SUB-63`: Constructed compiled LangGraph `StateGraph` in `app/agent/graph.py` implementing the 4-step pipeline: `intent_analyzer` -> `tool_executor` -> `evidence_validator` -> `response_generator`.
+  - `SUB-64`: Exposed agent endpoint `POST /api/v1/agent/query` in `app/api/v1/router_agent.py` returning answer, citations, evidence payload, provider used, and execution latency.
+  - `SUB-65`: Implemented `tests/integration/test_agent_workflow.py` verifying end-to-end state transitions and API endpoint. Full test suite: 41/41 tests passing (100%).
+
 ---
 
 ## 5. In-Progress Work
-* `TSK-16`: Implement Agent Tools & Provider Routing Engine (`SUB-57` to `SUB-60`).
+* `TSK-18`: Build Streamlit Application & Reactive UI Components (`SUB-66` to `SUB-71`).
 
 ---
 
 ## 6. Pending Work & Blockers
-* **Pending:** LangGraph Agent Workflow (`TSK-16`, `TSK-17`), Streamlit Dashboard (`TSK-18`, `TSK-19`), End-to-End Scenarios (`TSK-20`), Local Runbook (`TSK-21`).
+* **Pending:** Streamlit Dashboard (`TSK-18`, `TSK-19`), End-to-End Scenarios (`TSK-20`), Local Runbook (`TSK-21`).
 * **Blockers:** None.
 
 ---
 
 ## 7. Files Created, Modified, or Deleted
-* `app/schemas/api.py` (Created): API request/response schemas.
-* `app/api/deps.py` (Created): Database session and active business dependency resolvers.
-* `app/api/v1/router_health.py` (Created): Liveness and readiness endpoints.
-* `app/api/v1/router_ingest.py` (Created): File upload and ingestion endpoints.
-* `app/api/v1/router_analysis.py` (Created): Financial summary, blockage diagnostic, aging bucket, and projection endpoints.
-* `app/api/v1/router_graph.py` (Created): Graph sync, subgraph visualization, contagion paths, and concentration endpoints.
-* `app/main.py` (Created): FastAPI application entrypoint and middleware.
-* `app/graph/client.py` (Modified): Added circuit-breaker TTL connection caching for ultra-fast offline fallback.
-* `tests/conftest.py` (Modified): Added thread-safe `StaticPool` in-memory SQLite fixture for async TestClient tests.
-* `tests/integration/test_api.py` (Created): Integration tests for all REST API endpoints.
-* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 6 completion.
+* `app/agent/tools.py` (Created): Deterministic tool suite for LangGraph.
+* `app/agent/llm_client.py` (Created): Multi-provider failover LLM client (OpenRouter, Gemini, Hugging Face, deterministic fallback).
+* `app/agent/prompts.py` (Created): System prompts and grounded evidence prompt formatters.
+* `app/agent/state.py` (Created): AgentState and AgentCitation TypedDicts.
+* `app/agent/graph.py` (Created): 4-node LangGraph StateGraph diagnostic pipeline.
+* `app/api/v1/router_agent.py` (Created): Agent Q&A REST endpoint.
+* `app/main.py` (Modified): Registered agent router under `/api/v1`.
+* `tests/unit/test_agent_tools.py` (Created): Unit tests for agent tools, intent classification, and LLM failover.
+* `tests/integration/test_agent_workflow.py` (Created): Integration tests for end-to-end agent workflow and API query endpoint.
+* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 7 completion.
 
 ---
 
 ## 8. Database Schemas & Migrations Applied
-* No new migrations required in Phase 6. Operates against verified canonical ledger and graph projection models.
+* No new migrations required in Phase 7. Agent tools read from verified PostgreSQL canonical models and graph projection.
 
 ---
 
 ## 9. Commands Executed & Relevant Outcomes
-1. `pytest tests/integration/test_api.py`: 6 passed in 14.15s.
-2. `pytest tests/`: 36 passed in 21.07s (100% pass rate).
+1. `pytest tests/unit/test_agent_tools.py tests/integration/test_agent_workflow.py`: 5 passed in 26.41s.
+2. `pytest tests/`: 41 passed in 35.85s (100% pass rate).
 
 ---
 
 ## 10. Tests Executed
-* Total: 36 tests across 7 test modules.
-* **Pass Rate:** 36 / 36 (100%).
+* Total: 41 tests across 8 test modules.
+* **Pass Rate:** 41 / 41 (100%).
 
 ---
 
 ## 11. Bugs Encountered & Resolutions
-* *SQLite threading with FastAPI TestClient:* Resolved by configuring `connect_args={"check_same_thread": False}` and `poolclass=StaticPool` in test fixture.
-* *Repeated Neo4j connection timeout when offline:* Resolved by implementing a 10-second TTL circuit-breaker in `Neo4jClient.verify_connectivity()` to prevent repeated 2s socket timeouts.
-* *Deprecation of utcnow in Python 3.13 / Pydantic:* Resolved by migrating to `datetime.now(timezone.utc)`.
+* None in Phase 7. Multi-provider LLM cascade and deterministic synthesizer functioned seamlessly with full test coverage.
 
 ---
 
@@ -155,6 +164,8 @@
 * **ADR-007:** Two-Tier Ingestion Validation.
 * **ADR-008:** Dual-Engine Contagion Tracing (Neo4j Cypher + NetworkX fallback).
 * **ADR-009:** Standardized API Error Envelope (`{"error": {"code": "...", "message": "...", "details": ...}}`).
+* **ADR-010:** Multi-Provider LLM Failover Cascade (OpenRouter -> Gemini -> Hugging Face -> Grounded Rule-Based Synthesizer).
+* **ADR-011:** Strict Canonical Record Citations in Agent Outputs.
 
 ---
 
@@ -182,10 +193,11 @@
 ---
 
 ## 17. Precise Next Task to Execute
-* `TSK-16`: Implement Agent Tools & Provider Routing Engine (`SUB-57` to `SUB-60`).
+* `TSK-18`: Build Streamlit Application & Reactive UI Components (`SUB-66` to `SUB-71`) in `frontend/app.py`.
 
 ---
 
 ## 18. Last Verified Working State
-* Phase 6 completed (`TSK-15`); 36/36 tests passing (100%).
+* Phase 7 completed (`TSK-16`, `TSK-17`); 41/41 tests passing (100%).
+
 
