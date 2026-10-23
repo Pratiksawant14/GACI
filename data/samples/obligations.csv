@@ -1,0 +1,5 @@
+obligation_name,category,due_date,amount,bank_account_name,recipient,status
+Warehouse Mortgage Loan EMI,LOAN_EMI,2026-11-05,125000.00,HDFC Main Current,HDFC Bank,SCHEDULED
+Quarterly GST Settlement,TAX,2026-10-20,65000.00,HDFC Main Current,GST Portal,SCHEDULED
+Staff Payroll October,PAYROLL,2026-10-31,110000.00,HDFC Main Current,Staff Accounts,SCHEDULED
+Warehouse Lease Rent,RENT,2026-11-01,45000.00,SBI Trade Account,Landlord,SCHEDULED

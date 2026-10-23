@@ -1,0 +1,6 @@
+name,credit_limit,standard_payment_terms_days,customer_code,contact_email,contact_phone
+Metro Supermarkets,500000.00,30,CUST-001,accounts@metro.example.com,+91-9820011111
+Kalyan Department Store,300000.00,15,CUST-002,kalyan.dept@example.com,+91-9820022222
+Apex Provision Stores,200000.00,30,CUST-003,apex.provisions@example.com,+91-9820033333
+City Grocers Union,400000.00,45,CUST-004,cgu@example.com,+91-9820044444
+Bazaar Retail Chain,600000.00,30,CUST-005,bazaar.finance@example.com,+91-9820055555

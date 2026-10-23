@@ -11,7 +11,14 @@ def test_default_settings():
     assert settings.APP_NAME == "Graph-Based Cash-Flow Intelligence System"
     assert settings.ENVIRONMENT in ["development", "testing", "production"]
     assert settings.POSTGRES_PORT == 5432
-    assert "postgresql+psycopg2://" in settings.SQLALCHEMY_DATABASE_URI
+    if settings.DATABASE_URL:
+        assert settings.SQLALCHEMY_DATABASE_URI == settings.DATABASE_URL
+    else:
+        assert "postgresql+psycopg2://" in settings.SQLALCHEMY_DATABASE_URI
+
+    # Verify PostgreSQL URI derivation when DATABASE_URL is None
+    pg_settings = Settings(DATABASE_URL=None)
+    assert "postgresql+psycopg2://" in pg_settings.SQLALCHEMY_DATABASE_URI
 
 
 def test_override_database_url():

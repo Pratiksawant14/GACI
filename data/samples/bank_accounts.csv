@@ -1,0 +1,4 @@
+account_name,account_type,current_balance,account_number,bank_name
+HDFC Main Current,BANK,175000.00,50200012345678,HDFC Bank
+Warehouse Petty Cash,CASH,25000.00,,
+SBI Trade Account,BANK,85000.00,30100098765432,State Bank of India

@@ -1,0 +1,4 @@
+advance_reference,supplier_name,bank_account_name,disbursement_date,expected_delivery_date,advance_amount,fulfilled_amount,status
+ADV-2026-001,Sunrise Agro Industries,HDFC Main Current,2026-09-10,2026-09-25,100000.00,40000.00,PARTIAL_DELIVERED
+ADV-2026-002,Golden Grain Mills,HDFC Main Current,2026-09-20,2026-10-05,150000.00,0.00,DISBURSED
+ADV-2026-003,Spice Coast Plantations,SBI Trade Account,2026-10-05,2026-10-25,75000.00,75000.00,FULFILLED

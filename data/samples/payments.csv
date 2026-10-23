@@ -1,0 +1,5 @@
+payment_reference,bank_account_name,customer_name,payment_date,amount,payment_method,status,invoice_number,allocated_amount
+PMT-1001,HDFC Main Current,Metro Supermarkets,2026-09-15,40000.00,NEFT,CLEARED,INV-2026-102,40000.00
+PMT-1002,HDFC Main Current,Apex Provision Stores,2026-10-10,65000.00,RTGS,CLEARED,INV-2026-104,65000.00
+PMT-1003,Warehouse Petty Cash,Apex Provision Stores,2026-10-12,20000.00,CASH,CLEARED,INV-2026-105,20000.00
+PMT-1004,SBI Trade Account,Kalyan Department Store,2026-10-15,95000.00,CHEQUE,BOUNCED,INV-2026-103,95000.00
