@@ -31,22 +31,23 @@ def detect_table_type(filename: str, explicit_type: Optional[str] = None) -> str
             return clean_type
 
     lower_name = filename.lower()
-    if "customer" in lower_name:
-        return "customers"
-    elif "supplier" in lower_name:
-        return "suppliers"
-    elif "bank" in lower_name or "account" in lower_name:
-        return "bank_accounts"
-    elif "invoice" in lower_name or "sales" in lower_name:
-        return "invoices"
+    # Transactional tables first to avoid substring collision (e.g. supplier_advances -> advances, customer_payments -> payments)
+    if "advance" in lower_name:
+        return "advances"
     elif "payment" in lower_name:
         return "payments"
-    elif "advance" in lower_name:
-        return "advances"
-    elif "deliver" in lower_name:
+    elif "deliver" in lower_name or "receipt" in lower_name:
         return "deliveries"
-    elif "obligation" in lower_name or "loan" in lower_name:
+    elif "obligation" in lower_name or "loan" in lower_name or "emi" in lower_name or "statutory" in lower_name:
         return "obligations"
+    elif "invoice" in lower_name or "sales" in lower_name or "bill" in lower_name:
+        return "invoices"
+    elif "bank" in lower_name or "account" in lower_name:
+        return "bank_accounts"
+    elif "customer" in lower_name or "client" in lower_name:
+        return "customers"
+    elif "supplier" in lower_name or "vendor" in lower_name:
+        return "suppliers"
 
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
