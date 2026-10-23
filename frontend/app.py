@@ -465,6 +465,10 @@ with tab_ingest:
                 except Exception as exc:
                     st.error(f"Failed to ingest `{ufile.name}`: {exc}")
 
+            st.info("💡 **All files ingested! Click on the '📊 Executive KPIs' tab at the top or hit the button below to see your new metrics.**")
+            if st.button("🔄 Refresh Dashboard Now", type="secondary"):
+                st.rerun()
+
     st.markdown("---")
     st.subheader("🧹 Clean Slate & Reset (Zero Records Testing)")
     st.markdown("Wipe all transactional ledgers to start from a **100% clean, blank slate (0 records)** so you can test your own custom real data.")
