@@ -84,10 +84,19 @@
   - `SUB-50`: Implemented `get_entity_subgraph` extracting node and edge payloads for interactive PyVis visualizer.
   - `SUB-51`: Created `tests/integration/test_contagion.py`. Full test suite: 30/30 tests passed in 18.43s (100% pass rate).
 
+### Phase 6: Application Services & REST API Layer (`PH-06`)
+* `TSK-15`: Create FastAPI Application & Routers
+  - `SUB-52`: Implemented `app/main.py` application factory with CORS middleware, standardized error handling for HTTP, validation, and generic exceptions.
+  - `SUB-53`: Implemented health probe router in `app/api/v1/router_health.py` (`/health` liveness and `/ready` readiness checking PostgreSQL and Neo4j).
+  - `SUB-54`: Implemented data ingestion router in `app/api/v1/router_ingest.py` (`POST /api/v1/ingest/upload` for single and multi-file uploads with auto-table detection).
+  - `SUB-55`: Implemented deterministic analysis router in `app/api/v1/router_analysis.py` (`/cash-summary`, `/blockages`, `/cash-projection`, `/aging-buckets`).
+  - `SUB-56`: Implemented graph intelligence router in `app/api/v1/router_graph.py` (`POST /sync`, `/subgraph`, `/contagion-paths`, `/concentrations`).
+  - Implemented comprehensive integration test suite in `tests/integration/test_api.py`. All 6 API tests passing. Full suite: 36/36 tests passing (100%).
+
 ---
 
 ## 5. In-Progress Work
-* `TSK-15`: Create FastAPI Application & Routers (`SUB-52` to `SUB-56`).
+* `TSK-16`: Implement Agent Tools & Provider Routing Engine (`SUB-57` to `SUB-60`).
 
 ---
 
@@ -98,47 +107,54 @@
 ---
 
 ## 7. Files Created, Modified, or Deleted
-* `app/schemas/analysis.py` (Created): Schemas for summaries, blockage items, aging buckets, and cash projections.
-* `app/analysis/cash_engine.py` (Created): Deterministic financial calculation engine.
-* `app/graph/contagion.py` (Created): Contagion path tracer, concentration analyzer, and subgraph extractor.
-* `tests/unit/test_cash_engine.py` (Created): Unit tests for cash calculations.
-* `tests/integration/test_contagion.py` (Created): Integration tests for contagion engine.
-* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 5 completion.
+* `app/schemas/api.py` (Created): API request/response schemas.
+* `app/api/deps.py` (Created): Database session and active business dependency resolvers.
+* `app/api/v1/router_health.py` (Created): Liveness and readiness endpoints.
+* `app/api/v1/router_ingest.py` (Created): File upload and ingestion endpoints.
+* `app/api/v1/router_analysis.py` (Created): Financial summary, blockage diagnostic, aging bucket, and projection endpoints.
+* `app/api/v1/router_graph.py` (Created): Graph sync, subgraph visualization, contagion paths, and concentration endpoints.
+* `app/main.py` (Created): FastAPI application entrypoint and middleware.
+* `app/graph/client.py` (Modified): Added circuit-breaker TTL connection caching for ultra-fast offline fallback.
+* `tests/conftest.py` (Modified): Added thread-safe `StaticPool` in-memory SQLite fixture for async TestClient tests.
+* `tests/integration/test_api.py` (Created): Integration tests for all REST API endpoints.
+* `IMPLEMENTATION_STATUS.md` (Updated): Recorded Phase 6 completion.
 
 ---
 
 ## 8. Database Schemas & Migrations Applied
-* No new migrations required in Phase 5. Analysis queries operate against verified canonical and graph projection structures.
+* No new migrations required in Phase 6. Operates against verified canonical ledger and graph projection models.
 
 ---
 
 ## 9. Commands Executed & Relevant Outcomes
-1. `pytest tests/unit/test_cash_engine.py`: 4 passed in 2.58s.
-2. `pytest tests/integration/test_contagion.py`: 3 passed in 8.98s.
-3. `pytest tests/`: 30 passed in 18.43s (100% pass rate).
+1. `pytest tests/integration/test_api.py`: 6 passed in 14.15s.
+2. `pytest tests/`: 36 passed in 21.07s (100% pass rate).
 
 ---
 
 ## 10. Tests Executed
-* Total: 30 tests across 6 test modules.
-* **Pass Rate:** 30 / 30 (100%).
+* Total: 36 tests across 7 test modules.
+* **Pass Rate:** 36 / 36 (100%).
 
 ---
 
 ## 11. Bugs Encountered & Resolutions
-* None in Phase 5. (Addressed SQL column ordering vs property call during implementation).
+* *SQLite threading with FastAPI TestClient:* Resolved by configuring `connect_args={"check_same_thread": False}` and `poolclass=StaticPool` in test fixture.
+* *Repeated Neo4j connection timeout when offline:* Resolved by implementing a 10-second TTL circuit-breaker in `Neo4jClient.verify_connectivity()` to prevent repeated 2s socket timeouts.
+* *Deprecation of utcnow in Python 3.13 / Pydantic:* Resolved by migrating to `datetime.now(timezone.utc)`.
 
 ---
 
 ## 12. Architectural & Technical Decisions
 * **ADR-001:** Separation of Canonical Ledger (PostgreSQL) and Graph Projection (Neo4j).
 * **ADR-002:** Deterministic Tools for Financial Arithmetic in Agent Workflow.
-* **ADR-003:** SQLite In-Memory Support for Isolated Unit Testing.
+* **ADR-003:** SQLite In-Memory Support for Isolated Unit Testing with `StaticPool`.
 * **ADR-004:** Multi-Provider LLM Configuration with Free-Tier Routing.
 * **ADR-005:** Repository-Level Specialized Domain Queries.
 * **ADR-006:** In-Memory NetworkX Graph Mirror in Projection Service.
 * **ADR-007:** Two-Tier Ingestion Validation.
-* **ADR-008:** Dual-Engine Contagion Tracing (Neo4j parameterized Cypher when connected, with automatic fallback to relational NetworkX topological tracing for offline/standalone operation).
+* **ADR-008:** Dual-Engine Contagion Tracing (Neo4j Cypher + NetworkX fallback).
+* **ADR-009:** Standardized API Error Envelope (`{"error": {"code": "...", "message": "...", "details": ...}}`).
 
 ---
 
@@ -166,9 +182,10 @@
 ---
 
 ## 17. Precise Next Task to Execute
-* `TSK-15`: Create FastAPI Application & Routers (`SUB-52` to `SUB-56`) in `app/main.py` and `app/api/v1/`.
+* `TSK-16`: Implement Agent Tools & Provider Routing Engine (`SUB-57` to `SUB-60`).
 
 ---
 
 ## 18. Last Verified Working State
-* Phase 5 completed (`TSK-13`, `TSK-14`); 30/30 tests passing (100%).
+* Phase 6 completed (`TSK-15`); 36/36 tests passing (100%).
+

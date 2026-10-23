@@ -23,6 +23,9 @@ class Neo4jClient:
         self.user = user
         self.password = password
         self._driver: Optional[Driver] = None
+        self._last_check_time: float = 0.0
+        self._last_check_status: Optional[bool] = None
+        self._check_ttl: float = 10.0
 
     def get_driver(self) -> Driver:
         if self._driver is None:
@@ -35,17 +38,29 @@ class Neo4jClient:
             )
         return self._driver
 
-    def verify_connectivity(self) -> bool:
-        """Verifies if the Neo4j instance is alive and reachable."""
+    def verify_connectivity(self, force_refresh: bool = False) -> bool:
+        """Verifies if the Neo4j instance is alive and reachable with TTL caching."""
+        import time
+        now = time.time()
+        if not force_refresh and self._last_check_status is not None:
+            if (now - self._last_check_time) < self._check_ttl:
+                return self._last_check_status
+
         try:
             driver = self.get_driver()
             driver.verify_connectivity()
+            self._last_check_status = True
+            self._last_check_time = now
             return True
         except (ServiceUnavailable, AuthError) as exc:
             logger.warning(f"Neo4j instance at {self.uri} unreachable: {exc}")
+            self._last_check_status = False
+            self._last_check_time = now
             return False
         except Exception as exc:
             logger.error(f"Unexpected error connecting to Neo4j: {exc}")
+            self._last_check_status = False
+            self._last_check_time = now
             return False
 
     def close(self):

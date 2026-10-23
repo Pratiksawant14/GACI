@@ -5,7 +5,10 @@ Provides isolated configuration, temporary directories, and in-memory test datab
 
 import pytest
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 from app.core.config import Settings
+from app.models.base import Base
 
 
 @pytest.fixture(scope="session")
@@ -20,3 +23,21 @@ def test_settings() -> Settings:
         NEO4J_PASSWORD="test_password",
         OPENAI_API_KEY="test-mock-key"
     )
+
+
+from sqlalchemy.pool import StaticPool
+
+
+@pytest.fixture
+def db_session():
+    """Provides an isolated in-memory SQLite session with all tables created and thread sharing enabled."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        echo=False
+    )
+    Base.metadata.create_all(bind=engine)
+    with Session(engine) as s:
+        yield s
+    Base.metadata.drop_all(bind=engine)
