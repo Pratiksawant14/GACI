@@ -191,9 +191,12 @@ class IngestionService:
 
         elif table_type == "invoices":
             parsed = InvoiceImportRow(**row)
-            # Find customer
+            # Find customer by name or customer_code
             cust = self.session.scalars(
-                select(Customer).where(Customer.business_id == business_id, Customer.name == parsed.customer_name)
+                select(Customer).where(
+                    Customer.business_id == business_id,
+                    (Customer.name == parsed.customer_name) | (Customer.customer_code == parsed.customer_name)
+                )
             ).first()
             if not cust:
                 cust = Customer(business_id=business_id, name=parsed.customer_name)

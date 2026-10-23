@@ -125,6 +125,18 @@ class InvoiceImportRow(BaseModel):
                 data["invoice_number"] = data["invoice_id"]
             if "customer_id" in data and "customer_name" not in data:
                 data["customer_name"] = data["customer_id"]
+            # Normalize invoice status flexibly
+            st = str(data.get("status", "")).upper().strip()
+            if "PARTIAL" in st:
+                data["status"] = "PARTIAL"
+            elif st in ["PAID", "CLEARED", "SETTLED"]:
+                data["status"] = "PAID"
+            elif st in ["OVERDUE", "LATE"]:
+                data["status"] = "OVERDUE"
+            elif st in ["CANCELLED", "VOID"]:
+                data["status"] = "CANCELLED"
+            elif st in ["ISSUED", "OPEN", "UNPAID", "PENDING"]:
+                data["status"] = "ISSUED"
         return data
 
     @field_validator("invoice_number", "customer_name", mode="before")
@@ -208,6 +220,16 @@ class ObligationImportRow(BaseModel):
         if isinstance(data, dict):
             if "type" in data and "category" not in data:
                 data["category"] = data["type"]
+            # Normalize obligation status flexibly
+            st = str(data.get("status", "")).upper().strip()
+            if st in ["PENDING", "SCHEDULED", "UPCOMING", "ACTIVE", "DUE", "UNPAID"]:
+                data["status"] = "SCHEDULED"
+            elif st in ["PAID", "CLEARED", "COMPLETED", "SETTLED"]:
+                data["status"] = "PAID"
+            elif st in ["OVERDUE", "LATE"]:
+                data["status"] = "OVERDUE"
+            elif st in ["DEFAULTED", "BOUNCED", "FAILED"]:
+                data["status"] = "DEFAULTED"
         return data
 
 
