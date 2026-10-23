@@ -8,13 +8,27 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
+from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.logging import logger
+from app.db.session import engine
+from app.models.base import Base
 from app.api.v1.router_health import router as health_router
 from app.api.v1.router_ingest import router as ingest_router
 from app.api.v1.router_analysis import router as analysis_router
 from app.api.v1.router_graph import router as graph_router
 from app.api.v1.router_agent import router as agent_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Auto-initializes canonical tables if not already created."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database schema verified and initialized.")
+    except Exception as exc:
+        logger.warning(f"Database auto-init notice: {exc}")
+    yield
 
 
 def create_app() -> FastAPI:
@@ -24,7 +38,8 @@ def create_app() -> FastAPI:
         description="Decision-support intelligence detecting wholesale MSME cash blockages, contagion paths, and grounded explanations.",
         version="1.0.0",
         docs_url="/docs",
-        redoc_url="/redoc"
+        redoc_url="/redoc",
+        lifespan=lifespan
     )
 
     # CORS Configuration
