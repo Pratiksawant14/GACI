@@ -4,14 +4,16 @@ Communicates with the FastAPI backend service to fetch deterministic financial d
 graph visualization structures, and AI agent explainability results.
 """
 
+import sys
 import os
 from datetime import date
 from typing import Dict, Any, List, Optional
 import requests
 
-from app.core.config import settings
-from app.core.logging import logger
-
+# Ensure project root is in sys.path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 class ApiClient:
     """Client for FastAPI REST API endpoints."""

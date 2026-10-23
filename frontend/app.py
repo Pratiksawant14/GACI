@@ -4,6 +4,7 @@ Provides executive KPI dashboards, cash blockage diagnostics, interactive PyVis 
 forward cash-flow deficit projections, and grounded AI agent conversational explainability.
 """
 
+import sys
 import os
 import io
 from datetime import date, datetime
@@ -12,8 +13,17 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-from frontend.api_client import ApiClient
-from frontend.components.graph_view import generate_network_html, COLOR_PALETTE
+# Ensure project root is in sys.path for direct module resolution
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+try:
+    from frontend.api_client import ApiClient
+    from frontend.components.graph_view import generate_network_html, COLOR_PALETTE
+except ModuleNotFoundError:
+    from api_client import ApiClient
+    from components.graph_view import generate_network_html, COLOR_PALETTE
 
 # Page Configuration
 st.set_page_config(
