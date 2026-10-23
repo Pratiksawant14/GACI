@@ -107,10 +107,10 @@ def reset_business_data(
     """
     from app.models.finance import (
         PaymentAllocation, Payment, Delivery,
-        SupplierAdvance, SalesInvoice, FinancialObligation
+        SupplierAdvance, SalesInvoice, FinancialObligation,
+        IngestionLog
     )
     from app.models.entities import BankAccount, Customer, Supplier
-    from app.models.audit import IngestionLog
 
     # Delete in child-to-parent order to respect foreign keys
     db.query(PaymentAllocation).filter(PaymentAllocation.payment_id.in_(

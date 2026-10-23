@@ -18,10 +18,16 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+import importlib
+
 try:
+    import frontend.api_client
+    importlib.reload(frontend.api_client)
     from frontend.api_client import ApiClient
     from frontend.components.graph_view import generate_network_html, COLOR_PALETTE
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
+    import api_client
+    importlib.reload(api_client)
     from api_client import ApiClient
     from components.graph_view import generate_network_html, COLOR_PALETTE
 
@@ -401,7 +407,11 @@ with tab_agent:
         if st.button("⚡ Test All Provider APIs Now"):
             with st.spinner("Pinging external LLM providers with real test payloads..."):
                 try:
-                    h_res = api.get_llm_health()
+                    if hasattr(api, "get_llm_health"):
+                        h_res = api.get_llm_health()
+                    else:
+                        import requests
+                        h_res = requests.get(f"{api.base_url}/api/v1/agent/llm-health", timeout=30.0).json()
                     cols = st.columns(4)
                     for i, (prov, pdata) in enumerate(h_res.items()):
                         with cols[i % 4]:
@@ -465,7 +475,11 @@ with tab_ingest:
     with col_rst2:
         if st.button("⚠️ Wipe All Data (0 Records)", type="secondary", use_container_width=True):
             try:
-                rst_res = api.reset_database()
+                if hasattr(api, "reset_database"):
+                    rst_res = api.reset_database()
+                else:
+                    import requests
+                    rst_res = requests.post(f"{api.base_url}/api/v1/ingest/reset", timeout=15.0).json()
                 st.success(rst_res.get("message", "Database successfully wiped!"))
                 st.rerun()
             except Exception as exc:
