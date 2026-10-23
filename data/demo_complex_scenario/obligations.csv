@@ -1,0 +1,4 @@
+obligation_name,category,due_date,amount,bank_account_name,recipient,status
+HDFC Business Term Loan EMI,LOAN_EMI,2026-10-27,250000.00,HDFC Bank Current Account,HDFC Bank Ltd,SCHEDULED
+GST Monthly Tax Filing,TAX,2026-10-31,140000.00,HDFC Bank Current Account,Government of India - GST,SCHEDULED
+Warehouse Lease Rent,RENT,2026-11-05,90000.00,ICICI Overdraft Account,Industrial Warehousing Logistics,SCHEDULED

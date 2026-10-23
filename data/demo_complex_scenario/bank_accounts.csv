@@ -1,0 +1,4 @@
+account_name,account_type,current_balance,account_number,bank_name
+HDFC Bank Current Account,BANK,180000.00,HDFC-009128,HDFC Bank
+ICICI Overdraft Account,BANK,45000.00,ICICI-99214,ICICI Bank
+Central Cash Register,CASH,25000.00,CASH-TILL-01,In-House Vault

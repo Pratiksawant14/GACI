@@ -1,0 +1,5 @@
+name,credit_limit,standard_payment_terms_days,customer_code,contact_email,contact_phone
+Reliance Fresh Mart,1000000.00,30,CUST-REL-01,finance@reliancefresh.in,9820011221
+Metro Supermarkets,600000.00,21,CUST-MET-02,accounts@metrosuper.com,9820044552
+Gupta Provision Stores,300000.00,15,CUST-GUP-03,gupta.retail@gmail.com,9820077883
+Anand Wholesale Bazar,400000.00,15,CUST-ANA-04,anand.bazar@outlook.com,9820099004

@@ -1,0 +1,4 @@
+payment_reference,bank_account_name,customer_name,payment_date,amount,payment_method,status,invoice_number,allocated_amount
+PMT-REL-01,HDFC Bank Current Account,Reliance Fresh Mart,2026-10-12,250000.00,NEFT,CLEARED,INV-REL-501,250000.00
+PMT-GUP-02,HDFC Bank Current Account,Gupta Provision Stores,2026-09-24,50000.00,UPI,CLEARED,INV-GUP-503,50000.00
+PMT-ANA-03,ICICI Overdraft Account,Anand Wholesale Bazar,2026-10-06,85000.00,CHEQUE,BOUNCED,INV-ANA-504,85000.00

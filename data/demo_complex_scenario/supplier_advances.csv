@@ -1,0 +1,3 @@
+advance_reference,supplier_name,bank_account_name,disbursement_date,expected_delivery_date,advance_amount,fulfilled_amount,status
+ADV-SUP-01,Supreme Packaging Ltd,HDFC Bank Current Account,2026-09-15,2026-09-30,150000.00,0.00,DISBURSED
+ADV-AGR-02,National Agro Commodity Mills,ICICI Overdraft Account,2026-09-25,2026-10-10,200000.00,120000.00,PARTIAL_DELIVERED
