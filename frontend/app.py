@@ -395,6 +395,29 @@ with tab_agent:
         else:
             st.warning("Please enter a question.")
 
+    # Live Provider Diagnostics Expander
+    with st.expander("🔬 Live Multi-Provider LLM Engine Health & Network Ping", expanded=False):
+        st.markdown("Test the live external APIs (OpenRouter, Google Gemini, Hugging Face) directly with real HTTP requests and inspect raw round-trip latency.")
+        if st.button("⚡ Test All Provider APIs Now"):
+            with st.spinner("Pinging external LLM providers with real test payloads..."):
+                try:
+                    h_res = api.get_llm_health()
+                    cols = st.columns(4)
+                    for i, (prov, pdata) in enumerate(h_res.items()):
+                        with cols[i % 4]:
+                            status_val = pdata.get("status", "UNKNOWN")
+                            badge = "🟢" if "ONLINE" in status_val else "⚠️"
+                            st.markdown(f"**{badge} {prov.upper()}**")
+                            st.markdown(f"Status: `{status_val}`")
+                            st.markdown(f"Model: `{pdata.get('model', 'N/A')}`")
+                            st.markdown(f"Latency: `{pdata.get('latency_ms', 0)}ms`")
+                            if "response" in pdata:
+                                st.caption(f"Raw Output: {pdata['response']}")
+                            elif "error" in pdata:
+                                st.caption(f"Error: {pdata['error'][:100]}...")
+                except Exception as exc:
+                    st.error(f"Health check failed: {exc}")
+
 # TAB 6: DATA INGESTION
 with tab_ingest:
     st.header("Wholesale Ledger Ingestion & Audit Pipeline")
@@ -431,3 +454,19 @@ with tab_ingest:
                             st.warning(f"Validation warnings: {rep['errors']}")
                 except Exception as exc:
                     st.error(f"Failed to ingest `{ufile.name}`: {exc}")
+
+    st.markdown("---")
+    st.subheader("🧹 Clean Slate & Reset (Zero Records Testing)")
+    st.markdown("Wipe all transactional ledgers to start from a **100% clean, blank slate (0 records)** so you can test your own custom real data.")
+
+    col_rst1, col_rst2 = st.columns([3, 1])
+    with col_rst1:
+        st.caption("This will purge all customers, suppliers, bank accounts, invoices, payments, advances, and obligations for the active business.")
+    with col_rst2:
+        if st.button("⚠️ Wipe All Data (0 Records)", type="secondary", use_container_width=True):
+            try:
+                rst_res = api.reset_database()
+                st.success(rst_res.get("message", "Database successfully wiped!"))
+                st.rerun()
+            except Exception as exc:
+                st.error(f"Database reset failed: {exc}")

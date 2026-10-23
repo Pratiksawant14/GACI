@@ -94,3 +94,42 @@ async def upload_files(
         total_files_processed=len(files),
         graph_synced=True
     )
+
+
+@router.post("/reset", summary="Reset and Wipe All Business Financial Data")
+def reset_business_data(
+    business: Business = Depends(get_active_business),
+    db: Session = Depends(get_db)
+):
+    """
+    Clears all financial transactions, ledgers, accounts, counterparties,
+    and ingestion logs for the active business, returning it to a completely empty state.
+    """
+    from app.models.finance import (
+        PaymentAllocation, Payment, Delivery,
+        SupplierAdvance, SalesInvoice, FinancialObligation
+    )
+    from app.models.entities import BankAccount, Customer, Supplier
+    from app.models.audit import IngestionLog
+
+    # Delete in child-to-parent order to respect foreign keys
+    db.query(PaymentAllocation).filter(PaymentAllocation.payment_id.in_(
+        db.query(Payment.id).filter(Payment.business_id == business.id)
+    )).delete(synchronize_session=False)
+
+    db.query(Payment).filter(Payment.business_id == business.id).delete(synchronize_session=False)
+    db.query(Delivery).filter(Delivery.business_id == business.id).delete(synchronize_session=False)
+    db.query(SupplierAdvance).filter(SupplierAdvance.business_id == business.id).delete(synchronize_session=False)
+    db.query(SalesInvoice).filter(SalesInvoice.business_id == business.id).delete(synchronize_session=False)
+    db.query(FinancialObligation).filter(FinancialObligation.business_id == business.id).delete(synchronize_session=False)
+    db.query(BankAccount).filter(BankAccount.business_id == business.id).delete(synchronize_session=False)
+    db.query(Customer).filter(Customer.business_id == business.id).delete(synchronize_session=False)
+    db.query(Supplier).filter(Supplier.business_id == business.id).delete(synchronize_session=False)
+    db.query(IngestionLog).filter(IngestionLog.business_id == business.id).delete(synchronize_session=False)
+
+    db.commit()
+    logger.info(f"Successfully purged all transactional records for business {business.id}")
+    return {
+        "status": "success",
+        "message": f"All financial records for '{business.name}' have been wiped. Database is completely clean (0 records)."
+    }

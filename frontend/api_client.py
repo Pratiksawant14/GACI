@@ -131,3 +131,16 @@ class ApiClient:
         resp = requests.post(f"{self.base_url}/api/v1/agent/query", json=payload, timeout=45.0)
         resp.raise_for_status()
         return resp.json()
+
+    def reset_database(self, business_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if business_id:
+            params["business_id"] = business_id
+        resp = requests.post(f"{self.base_url}/api/v1/ingest/reset", params=params, timeout=self.timeout)
+        resp.raise_for_status()
+        return resp.json()
+
+    def get_llm_health(self) -> Dict[str, Any]:
+        resp = requests.get(f"{self.base_url}/api/v1/agent/llm-health", timeout=30.0)
+        resp.raise_for_status()
+        return resp.json()
