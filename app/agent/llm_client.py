@@ -25,7 +25,7 @@ class MultiProviderLLMClient:
         openrouter_key: Optional[str] = settings.OPENROUTER_API_KEY,
         gemini_key: Optional[str] = settings.GEMINI_API_KEY,
         huggingface_key: Optional[str] = settings.HUGGINGFACE_API_KEY,
-        timeout_seconds: float = 12.0
+        timeout_seconds: float = 18.0
     ):
         self.openrouter_key = openrouter_key
         self.gemini_key = gemini_key
@@ -40,7 +40,7 @@ class MultiProviderLLMClient:
     ) -> Dict[str, Any]:
         """
         Attempts generation across prioritized providers in cascade order:
-        1. OpenRouter (Llama 3.3 70B / Mistral free models)
+        1. OpenRouter (openai/gpt-4o-mini / Llama models)
         2. Google Gemini (Gemini 2.0 / 1.5 Flash)
         3. Hugging Face Inference API
         4. Grounded Deterministic Offline Synthesizer
@@ -51,13 +51,13 @@ class MultiProviderLLMClient:
         if self.openrouter_key and len(self.openrouter_key.strip()) > 10:
             try:
                 start_t = time.time()
-                res = self._call_openrouter(system_prompt, user_prompt)
+                res, model_used = self._call_openrouter(system_prompt, user_prompt)
                 latency = round((time.time() - start_t) * 1000, 2)
-                logger.info(f"LLM generation succeeded via OpenRouter ({latency}ms)")
+                logger.info(f"LLM generation succeeded via OpenRouter ({latency}ms) using {model_used}")
                 return {
                     "text": res,
                     "provider": "openrouter",
-                    "model": settings.OPENROUTER_MODEL,
+                    "model": model_used,
                     "latency_ms": latency
                 }
             except Exception as exc:
@@ -109,8 +109,8 @@ class MultiProviderLLMClient:
             "fallback_reasons": errors
         }
 
-    def _call_openrouter(self, system_prompt: str, user_prompt: str) -> str:
-        """Invokes OpenRouter chat completions API."""
+    def _call_openrouter(self, system_prompt: str, user_prompt: str) -> tuple[str, str]:
+        """Invokes OpenRouter chat completions API with model fallback."""
         url = f"{settings.OPENROUTER_BASE_URL.rstrip('/')}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.openrouter_key}",
@@ -118,20 +118,37 @@ class MultiProviderLLMClient:
             "X-Title": "Cash-Flow Intelligence System",
             "Content-Type": "application/json"
         }
-        payload = {
-            "model": settings.OPENROUTER_MODEL,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.1,
-            "max_tokens": 1500
-        }
-        resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout)
-        if resp.status_code != 200:
-            raise RuntimeError(f"OpenRouter returned status {resp.status_code}: {resp.text}")
-        data = resp.json()
-        return data["choices"][0]["message"]["content"].strip()
+
+        models_to_try = [
+            settings.OPENROUTER_MODEL,
+            "openai/gpt-4o-mini",
+            "meta-llama/llama-3.1-8b-instruct",
+            "mistralai/mistral-small"
+        ]
+        unique_models = list(dict.fromkeys(models_to_try))
+
+        last_err = None
+        for model in unique_models:
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.1,
+                "max_tokens": 800
+            }
+            try:
+                resp = requests.post(url, headers=headers, json=payload, timeout=self.timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"].strip()
+                    return content, model
+                last_err = f"Model {model} returned HTTP {resp.status_code}: {resp.text[:150]}"
+            except Exception as exc:
+                last_err = f"Model {model} network error: {exc}"
+
+        raise RuntimeError(f"OpenRouter models failed. Last error: {last_err}")
 
     def _call_gemini(self, system_prompt: str, user_prompt: str) -> str:
         """Invokes Google Gemini generateContent API via REST."""

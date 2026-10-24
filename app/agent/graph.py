@@ -166,9 +166,13 @@ class CashFlowAgentWorkflow:
             evidence=state.get("validated_evidence", {})
         )
 
+        prov = gen_result["provider"]
+        if gen_result.get("model"):
+            prov = f"{prov} ({gen_result['model']})"
+
         return {
             "final_response": gen_result["text"],
-            "provider_used": gen_result["provider"],
+            "provider_used": prov,
             "latency_ms": gen_result.get("latency_ms", 0.0)
         }
 

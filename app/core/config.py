@@ -45,10 +45,10 @@ class Settings(BaseSettings):
     # Multi-Provider LLM Configuration
     LLM_PROVIDER: Literal["openrouter", "gemini", "huggingface", "openai"] = "openrouter"
     
-    # OpenRouter API (Free models: meta-llama/llama-3.3-70b-instruct:free, etc.)
+    # OpenRouter API (Default: openai/gpt-4o-mini for maximum speed and affordability)
     OPENROUTER_API_KEY: Optional[str] = None
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    OPENROUTER_MODEL: str = "meta-llama/llama-3.3-70b-instruct:free"
+    OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
 
     # Google Gemini API
     GEMINI_API_KEY: Optional[str] = None
