@@ -18,6 +18,15 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+# Sync Streamlit secrets to environment variables (for Streamlit Community Cloud)
+try:
+    if hasattr(st, "secrets"):
+        for sec_k, sec_v in st.secrets.items():
+            if isinstance(sec_v, str) and sec_k not in os.environ:
+                os.environ[sec_k] = sec_v
+except Exception:
+    pass
+
 import importlib
 
 try:
@@ -98,8 +107,51 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+def ensure_backend_running(port: int = 8000, timeout: float = 10.0) -> bool:
+    """
+    Checks if FastAPI backend is alive. If not, spawns uvicorn in a background thread.
+    Enables single-service cloud deployments (e.g. Streamlit Community Cloud) and local resilience.
+    """
+    import socket
+    import time
+    import threading
+
+    def is_port_open(p: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.5)
+            return sock.connect_ex(("127.0.0.1", p)) == 0
+
+    if is_port_open(port):
+        return True
+
+    def run_uvicorn():
+        import uvicorn
+        from app.main import app as fastapi_app
+        config = uvicorn.Config(
+            fastapi_app,
+            host="127.0.0.1",
+            port=port,
+            log_level="warning",
+            access_log=False
+        )
+        server = uvicorn.Server(config)
+        server.run()
+
+    server_thread = threading.Thread(target=run_uvicorn, daemon=True)
+    server_thread.start()
+
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        if is_port_open(port):
+            return True
+        time.sleep(0.3)
+
+    return False
+
+
 @st.cache_resource
 def get_client() -> ApiClient:
+    ensure_backend_running(port=8000)
     return ApiClient()
 
 
