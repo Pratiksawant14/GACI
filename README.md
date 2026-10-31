@@ -1,3 +1,13 @@
+---
+title: GACI - MSME Cash Flow Intelligence
+emoji: 💹
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Graph-Based Agentic Cash-Flow Intelligence System for Wholesale MSMEs
 
 An agentic, time-aware decision-support platform designed for wholesale distributors and MSMEs. The system tracks working capital, detects and quantifies cash blockages (overdue accounts receivable, unfulfilled supplier advances, dishonored cheques, upcoming payment shortfalls), traces contagion paths through a temporal business graph, and explains findings with evidence-grounded reasoning.
